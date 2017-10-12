@@ -1,0 +1,16 @@
+html {
+    background: #b784c4; /* For browsers that do not support gradients */    
+    background: -webkit-linear-gradient(left, #b784c4, #ceb3d5); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(right, #b784c4 #ceb3d5); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(right, #b784c4, #ceb3d5); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(to right, #b784c4, #ceb3d5); /* Standard syntax (must be last) */
+}
+h1,h2 {
+    font-family: monospace;
+}
+a {
+    color: #4dd52c;
+}
+p {
+    font-family: cursive;
+}
