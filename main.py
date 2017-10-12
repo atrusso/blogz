@@ -19,9 +19,6 @@ class Blog(db.Model):
         self.title = title
         self.body = body
 
-    def __repr__(self):
-        return '<Blog %r>' % self.id
-
 @app.route('/', methods=['GET'])
 def index():
     return redirect('blog')
