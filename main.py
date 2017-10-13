@@ -26,9 +26,13 @@ def index():
 
 @app.route('/blog', methods=['GET'])
 def blog():
-    blogs = Blog.query.all()
-    return render_template('blog.html',blogs=blogs)
-    return render_template('blog.html')
+    if 'id' in request.args:
+        blog_id = request.args.get('id')
+        blog = Blog.query.filter_by(id=blog_id).first()
+        return render_template('blog.html', blog=blog)
+    else:
+        blogs = Blog.query.all()
+        return render_template('blog.html',blogs=blogs)
 
 
 @app.route('/newpost', methods=['POST', 'GET'])
@@ -56,15 +60,7 @@ def add_post():
         blog = Blog(title, body)
         db.session.add(blog)
         db.session.commit()
-        return redirect('/single-blog?id=' + str(blog.id))
-
-
-@app.route('/single-blog', methods=['GET'])
-def display_blog():
-    if request.method == 'GET':
-        blog_id = request.args.get('id')
-        blog = Blog.query.filter_by(id=blog_id).first()
-        return render_template('single-blog.html', blog=blog)
+        return redirect('/blog?id=' + str(blog.id))
         
         
 if __name__ == '__main__':
