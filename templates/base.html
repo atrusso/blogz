@@ -11,10 +11,12 @@
             }
     </style>
 <body>
-    <div>
+    <span>
             <a href="/blog">Main Blog Page</a>
+    </span>
+    <span>
             <a href="/newpost">Add a New Entry</a>
-    </div>
+    </span>
 
     {% with messages = get_flashed_messages() %}
     {% if messages %}
