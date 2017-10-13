@@ -8,6 +8,9 @@ html {
 h1,h2 {
     font-family: monospace;
 }
+h2 {
+    color: #4dd52c;
+}
 a {
     color: #4dd52c;
 }
