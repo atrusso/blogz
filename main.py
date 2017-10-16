@@ -31,7 +31,7 @@ def blog():
         blog = Blog.query.filter_by(id=blog_id).first()
         return render_template('blog.html', blog=blog)
     else:
-        blogs = Blog.query.all()
+        blogs = Blog.query.order_by("id desc").all()
         return render_template('blog.html',blogs=blogs)
 
 
