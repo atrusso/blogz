@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, flash
+from flask import Flask, request, redirect, render_template, flash, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -27,8 +27,8 @@ class User(db.Model):
     password = db.Column(db.String(50))
     blogs = db.relationship('Blog', backref='owner')
 
-    def __init__(self, email, password):
-        self.email = email
+    def __init__(self, username, password):
+        self.username = username
         self.password = password
 
 @app.route('/', methods=['GET'])
@@ -37,7 +37,43 @@ def index():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    
+    if request.method == 'GET':
+        error = request.args.get('error')
+        return render_template('signup.html', error=error)
+
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        verifypass = request.form['verifypass']
+        existing_user = User.query.filter_by(username=username).first()
+
+    #valid username, pass, verify redirect to /newpost with username stored in session
+    if not existing_user and password == verifypass:
+        new_user = User(username, password)
+        db.session.add(new_user)
+        db.commit()
+        session['user'] = username
+        return redirect('/newpost')
+
+    #username, pass, verify left blank redirect to /signup with message
+    if username == "" or password == "" or verifypass = "":
+        error = "username, password, or verify password field(s) were empty"
+        return redirect('/signup?error=' + error)
+
+    #existing username redirect to /signup with message
+    if existing_user:
+        error = "username is already on file"
+        return redirect('/signup?error=' + error)
+
+    #different pass vs verify, redirect to /signup with message
+    if password == verifypass:
+        error = "password and verify password fields did not match"
+        return redirect('/signup?error=' + error)
+
+    #username or pass  < 3 characters, redirect to /signup with message
+    if len(username) < 3 or len(password) < 3:
+        error = "fields must be more than 3 characters"
+        return redirect('/signup?error=' + error)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -47,8 +83,8 @@ def login():
         return render_template('login.html', error=error)
 
     if request.method == 'POST':
-        username = form.request['username']
-        password = form.request['password']
+        username = request.form['username']
+        password = request.form['password']
         user = User.query.filter_by(username=username).first()
 
     #correct creds redirect to to /newpost with username stored in session
@@ -59,12 +95,12 @@ def login():
     #incorrect password redirect to /login with message
     if user and password != User.query.filter_by(user).first():
         error = 'password does not match the username'
-        return redirect('/?error=' + error)
+        return redirect('/login?error=' + error)
 
     #username doesn't exist redirect to /login with message
     if not user:
         error = 'username does not exist'
-        return redirect('/?error=' + error)
+        return redirect('/login?error=' + error)
 
 @app.route('/blog', methods=['GET'])
 def blog():
