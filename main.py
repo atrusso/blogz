@@ -1,12 +1,13 @@
 from flask import Flask, request, redirect, render_template, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:blogoriffic7@localhost:8889/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
-app.secret_key = 'y337kGcys&zP3Bn44TBer81DC1a'
+app.secret_key = 'y337kGcys&zP3Bn44TBer81DC1aX81nwU0o'
 
 
 class Blog(db.Model):
@@ -15,11 +16,14 @@ class Blog(db.Model):
     title = db.Column(db.String(120))
     body = db.Column(db.Text())
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    date_published = db.Column(db.DateTime)
 
-    def __init__(self, title, body, owner):
+    def __init__(self, title, body, owner, date_published=None):
         self.title = title
         self.body = body
         self.owner = owner
+        if date_published is None:
+            self.date_published = datetime.utcnow()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,9 +35,16 @@ class User(db.Model):
         self.username = username
         self.password = password
 
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'list_blogs', 'index', 'signup']
+    if request.endpoint not in allowed_routes and 'user' not in session:
+        return redirect('/login')
+
 @app.route('/', methods=['GET'])
 def index():
-    return redirect('index')
+    users = User.query.all()
+    return render_template('index.html', users=users)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -47,34 +58,29 @@ def signup():
         verifypass = request.form['verifypass']
         existing_user = User.query.filter_by(username=username).first()
 
-    #valid username, pass, verify redirect to /newpost with username stored in session
-    if not existing_user and password == verifypass:
-        new_user = User(username, password)
-        db.session.add(new_user)
-        db.commit()
-        session['user'] = username
-        return redirect('/newpost')
-
     #username, pass, verify left blank redirect to /signup with message
     if username == "" or password == "" or verifypass == "":
         error = "username, password, or verify password field(s) were empty"
         return redirect('/signup?error=' + error)
-
     #existing username redirect to /signup with message
-    if existing_user:
+    elif existing_user:
         error = "username is already on file"
         return redirect('/signup?error=' + error)
-
     #different pass vs verify, redirect to /signup with message
-    if password == verifypass:
+    elif password != verifypass:
         error = "password and verify password fields did not match"
         return redirect('/signup?error=' + error)
-
     #username or pass  < 3 characters, redirect to /signup with message
-    if len(username) < 3 or len(password) < 3:
+    elif len(username) < 3 or len(password) < 3:
         error = "fields must be more than 3 characters"
         return redirect('/signup?error=' + error)
-
+    #valid username, pass, verify redirect to /newpost with username stored in session
+    elif not existing_user and password == verifypass:
+        new_user = User(username, password)
+        db.session.add(new_user)
+        db.session.commit()
+        session['user'] = username
+        return redirect('/newpost')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -88,12 +94,12 @@ def login():
         user = User.query.filter_by(username=username).first()
 
     #correct creds redirect to to /newpost with username stored in session
-    if user and password == User.query.filter_by(user).first():
-        session['user'] = user
+    if user and password == user.password:
+        session['user'] = username
         return redirect('/newpost')
 
     #incorrect password redirect to /login with message
-    if user and password != User.query.filter_by(user).first():
+    if user and password != user.password:
         error = 'password does not match the username'
         return redirect('/login?error=' + error)
 
@@ -104,18 +110,23 @@ def login():
 
 @app.route('/logout', methods=['GET'])
 def logout():
-    del session['username']
+    del session['user']
     return redirect('/blog')    
 
 @app.route('/blog', methods=['GET'])
-def blog():
+def list_blogs():
     if 'id' in request.args:
         blog_id = request.args.get('id')
         blog = Blog.query.filter_by(id=blog_id).first()
         return render_template('blog.html', blog=blog)
+    elif 'user' in request.args:
+        user_id = request.args.get('user')
+        user = User.query.filter_by(id=user_id).first()
+        user_blogs = Blog.query.filter_by(owner_id=user_id).order_by("date_published desc").all()
+        return render_template('singleUser.html', blogs=user_blogs, user=user)
     else:
-        blogs = Blog.query.order_by("id desc").all()
-        return render_template('blog.html',blogs=blogs)
+        all_blogs = Blog.query.order_by("date_published desc").all()
+        return render_template('blog.html', blogs=all_blogs)
 
 
 @app.route('/newpost', methods=['POST', 'GET'])

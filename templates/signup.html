@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <a href="/login">Login</a>
-    <form action="/login" method="post">
+    <form action="/signup" method="post">
+        {% if error %}
+            <p class="error">{{error}}</p>
+        {% endif %}
         <table>
             <tr>
                 <td><label for="username">Username:</label></td>
@@ -23,6 +25,6 @@
                 </td>
             </tr>
         </table>
-        <input type="submit" value="Login">
+        <input type="submit" value="Signup">
     </form>
 {% endblock %}
