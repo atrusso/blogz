@@ -5,17 +5,26 @@
         <title>{{title}}</title>
     </head>
     <style>
-            .error {
-                color: red;
-                font-style: oblique;
-            }
+        .error {
+            color: red;
+            font-style: oblique;
+        }
     </style>
 <body>
     <span>
-            <a href="/blog">Main Blog Page</a>
+        <a href="/blog">Main Blog Page</a>
     </span>
     <span>
-            <a href="/newpost">Add a New Entry</a>
+        <a href="/newpost">Add a New Entry</a>
+    </span>
+    <span>
+        <a href="/logout">Logout</a>
+    </span>
+    <span>
+        <a href="/login">Login</a>
+    </span>
+    <span>
+        <a href="/">Homepage</a>
     </span>
 
     {% with messages = get_flashed_messages() %}

@@ -33,7 +33,7 @@ class User(db.Model):
 
 @app.route('/', methods=['GET'])
 def index():
-    return redirect('blog')
+    return redirect('index')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -56,7 +56,7 @@ def signup():
         return redirect('/newpost')
 
     #username, pass, verify left blank redirect to /signup with message
-    if username == "" or password == "" or verifypass = "":
+    if username == "" or password == "" or verifypass == "":
         error = "username, password, or verify password field(s) were empty"
         return redirect('/signup?error=' + error)
 
@@ -101,6 +101,11 @@ def login():
     if not user:
         error = 'username does not exist'
         return redirect('/login?error=' + error)
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    del session['username']
+    return redirect('/blog')    
 
 @app.route('/blog', methods=['GET'])
 def blog():
