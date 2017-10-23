@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, render_template, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from hashUtils import make_pw_hash, check_pw_hash
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -28,12 +29,12 @@ class Blog(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
-    password = db.Column(db.String(50))
+    hash_password = db.Column(db.String(120))
     blogs = db.relationship('Blog', backref='owner')
 
     def __init__(self, username, password):
         self.username = username
-        self.password = password
+        self.hash_password = make_pw_hash(password)
 
 @app.before_request
 def require_login():
@@ -93,20 +94,22 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
 
-    #correct creds redirect to to /newpost with username stored in session
-    if user and password == user.password:
-        session['user'] = username
-        return redirect('/newpost')
-
-    #incorrect password redirect to /login with message
-    if user and password != user.password:
-        error = 'password does not match the username'
-        return redirect('/login?error=' + error)
-
     #username doesn't exist redirect to /login with message
     if not user:
         error = 'username does not exist'
         return redirect('/login?error=' + error)
+
+    #correct creds redirect to to /newpost with username stored in session
+    if user and check_pw_hash(password, user.hash_password):
+        session['user'] = username
+        return redirect('/newpost')
+
+    #incorrect creds redirect to /login with message
+    if user and not check_pw_hash(password, user.hash_password):
+        error = 'password does not match the username'
+        return redirect('/login?error=' + error)
+
+
 
 @app.route('/logout', methods=['GET'])
 def logout():
