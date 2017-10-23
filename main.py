@@ -2,39 +2,10 @@ from flask import Flask, request, redirect, render_template, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from hashUtils import make_pw_hash, check_pw_hash
+from models import User, Blog
+from app import app, db
 
-app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:blogoriffic7@localhost:8889/blogz'
-app.config['SQLALCHEMY_ECHO'] = True
-db = SQLAlchemy(app)
 app.secret_key = 'y337kGcys&zP3Bn44TBer81DC1aX81nwU0o'
-
-
-class Blog(db.Model):
-
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120))
-    body = db.Column(db.Text())
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    date_published = db.Column(db.DateTime)
-
-    def __init__(self, title, body, owner, date_published=None):
-        self.title = title
-        self.body = body
-        self.owner = owner
-        if date_published is None:
-            self.date_published = datetime.utcnow()
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True)
-    hash_password = db.Column(db.String(120))
-    blogs = db.relationship('Blog', backref='owner')
-
-    def __init__(self, username, password):
-        self.username = username
-        self.hash_password = make_pw_hash(password)
 
 @app.before_request
 def require_login():

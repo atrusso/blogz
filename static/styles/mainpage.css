@@ -22,3 +22,10 @@ span {
     border-spacing: 5px;
     padding: 5px;
 }
+form {
+    left: 50px;
+    top: 50px;
+    position: absolute;
+    margin: 0 auto;
+
+}
